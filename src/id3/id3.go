@@ -22,6 +22,7 @@ package id3
 import (
 	"bufio"
 	"fmt"
+	"image"
 	"io"
 )
 
@@ -37,18 +38,39 @@ type ID3v2Header struct {
 	Size              int32
 }
 
+type EmbeddedPicture struct {
+	PictureType byte
+	MIMEType    string
+	Image       *image.Image
+}
+
 // A parsed ID3 file with common fields exposed.
 type File struct {
 	Header ID3v2Header
 
-	Name   string
-	Artist string
-	Album  string
-	Year   string
-	Track  string
-	Disc   string
-	Genre  string
-	Length string
+	Name     string
+	Artist   string
+	Album    string
+	Year     string
+	Track    string
+	Disc     string
+	Genre    string
+	Length   string
+	Pictures []EmbeddedPicture
+}
+
+func (f *File) GetCoverPicture() (cover *image.Image) {
+	for _, img := range f.Pictures {
+		// prefer actual cover, but 'Other' is often used so accept that
+		if img.PictureType == byte(3) {
+			cover = img.Image
+			break
+		}
+		if img.PictureType == byte(0) {
+			cover = img.Image
+		}
+	}
+	return
 }
 
 // Parse the input for ID3 information. Returns nil if parsing failed or the

@@ -16,6 +16,11 @@ package id3
 
 import (
 	"bufio"
+	"bytes"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
+	"io"
 )
 
 // ID3 v2.4 uses sync-safe frame sizes similar to those found in the header.
@@ -49,6 +54,34 @@ func parseID3v24File(reader *bufio.Reader, file *File) {
 			file.Disc = readString(reader, size)
 		case "TLEN":
 			file.Length = readString(reader, size)
+		case "APIC":
+			imgData := readBytes(reader, size)
+			b := bytes.NewBuffer(imgData)
+			_, err := b.ReadByte()
+			if err != nil {
+				panic(err)
+			}
+			mimeType, err := b.ReadString(0)
+			if err != nil {
+				panic(err)
+			}
+			pictureType, err := b.ReadByte()
+			if err != nil {
+				panic(err)
+			}
+			_, err = b.ReadString(0) // ignore description
+			if err != nil {
+				panic(err)
+			}
+
+			b2 := &bytes.Buffer{}
+			io.Copy(b2, b)
+			img, _, err := image.Decode(b2) // don't care about the detected-type
+			if err != nil {
+				break
+			}
+			file.Pictures = append(file.Pictures, EmbeddedPicture{pictureType, mimeType, &img})
+
 		default:
 			skipBytes(reader, size)
 		}
