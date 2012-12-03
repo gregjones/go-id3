@@ -22,7 +22,6 @@ package id3
 import (
 	"bufio"
 	"fmt"
-	"image"
 	"io"
 )
 
@@ -41,7 +40,7 @@ type ID3v2Header struct {
 type EmbeddedPicture struct {
 	PictureType byte
 	MIMEType    string
-	Image       *image.Image
+	Image       []byte
 }
 
 // A parsed ID3 file with common fields exposed.
@@ -59,7 +58,7 @@ type File struct {
 	Pictures []EmbeddedPicture
 }
 
-func (f *File) GetCoverPicture() (cover *image.Image) {
+func (f *File) GetCoverPicture() (cover []byte) {
 	for _, img := range f.Pictures {
 		// prefer actual cover, but 'Other' is often used so accept that
 		if img.PictureType == byte(3) {

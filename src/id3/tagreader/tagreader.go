@@ -16,7 +16,7 @@ package main
 
 import (
 	"fmt"
-	"id3"
+	"github.com/gregjones/go-id3/src/id3"
 	"os"
 )
 
